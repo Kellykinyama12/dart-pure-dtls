@@ -1,0 +1,20 @@
+name: dart_dtls_final
+description: A sample command-line application.
+version: 1.0.0
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ^3.5.0-131.0.dev
+
+# Add regular dependencies here.
+dependencies:
+  asn1lib: ^1.5.6
+  basic_utils: ^5.7.0
+  convert: ^3.1.1
+  cryptography: ^2.7.0
+  pointycastle: ^3.9.1
+  # path: ^1.8.0
+
+dev_dependencies:
+  lints: ^3.0.0
+  test: ^1.24.0
