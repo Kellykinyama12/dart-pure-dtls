@@ -70,7 +70,7 @@ class ClientHello {
     cookie = Uint8List.fromList(buf.sublist(offset, offset + cookieLength));
     offset += cookieLength;
 
-    print("cookie: $cookie, length: $cookieLength");
+    //print("cookie: $cookie, length: $cookieLength");
 
     var (decodedCipherSuiteIDs, decodedOffset, errCipher) =
         decodeCipherSuiteIDs(buf, offset, arrayLen);
@@ -126,12 +126,12 @@ class ClientHello {
     var count = length ~/ 2;
     offset += 2;
 
-    print("cipher suites length: $count");
+    // print("cipher suites length: $count");
     List<intCipherSuiteID> result = [];
     for (int i = 0; i < count; i++) {
       try {
         result.add(uint16(buf.sublist(offset, offset + 2)));
-        print("Cipher suit id: ${result[i]}");
+        // print("Cipher suit id: ${result[i]}");
         offset += 2;
       } catch (e) {
         return (result, offset, true);

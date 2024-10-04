@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'utils.dart';
+
 enum HandshakeType {
   HelloRequest,
   ClientHello,
@@ -50,27 +52,6 @@ extension HandshakeTypeExtension on HandshakeType {
   }
 }
 
-class Uint24 {
-  final int value;
-
-  Uint24(this.value);
-
-  factory Uint24.fromBytes(Uint8List bytes) {
-    return Uint24((bytes[0] << 16) | (bytes[1] << 8) | bytes[2]);
-  }
-
-  Uint8List toBytes() {
-    return Uint8List(3)
-      ..[0] = (value >> 16) & 0xFF
-      ..[1] = (value >> 8) & 0xFF
-      ..[2] = value & 0xFF;
-  }
-
-  int intVal() {
-    return value;
-  }
-}
-
 class HandshakeHeader {
   HandshakeType handshakeType;
   Uint24 length;
@@ -116,11 +97,11 @@ class HandshakeHeader {
     final fragmentLength = Uint24.fromBytes(buf.sublist(offset, offset + 3));
     offset += 3;
 
-    print("""{handshakeType: $handshakeType,
-        length: ${length.value},
-        messageSequence: $messageSequence,
-        fragmentOffset: ${fragmentOffset.value},
-        fragmentLength: ${fragmentLength.value},}""");
+    // print("""{handshakeType: $handshakeType,
+    //     length: ${length.value},
+    //     messageSequence: $messageSequence,
+    //     fragmentOffset: ${fragmentOffset.value},
+    //     fragmentLength: ${fragmentLength.value},}""");
     return (
       HandshakeHeader(
           handshakeType: handshakeType,
@@ -128,7 +109,7 @@ class HandshakeHeader {
           messageSequence: messageSequence,
           fragmentOffset: fragmentOffset,
           fragmentLength: fragmentLength,
-          intFragmented: fragmentLength.intVal()),
+          intFragmented: fragmentLength.toUint32()),
       offset,
       null
     );

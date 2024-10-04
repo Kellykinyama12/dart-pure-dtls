@@ -15,34 +15,6 @@ import 'package:dart_dtls_final/server_hello.dart';
 import 'package:dart_dtls_final/server_hello_done.dart';
 import 'package:dart_dtls_final/server_key_exchange.dart';
 
-class Uint24 {
-  final int value;
-
-  Uint24(this.value);
-
-  factory Uint24.fromBytes(Uint8List bytes) {
-    return Uint24((bytes[0] << 16) | (bytes[1] << 8) | bytes[2]);
-  }
-
-  factory Uint24.fromUint32(int i) {
-    final buf = Uint8List(4);
-    final byteData = ByteData.sublistView(buf);
-    byteData.setUint32(0, i, Endian.big);
-    return Uint24((buf[1] << 16) | (buf[2] << 8) | buf[3]);
-  }
-
-  Uint8List toBytes() {
-    return Uint8List(3)
-      ..[0] = (value >> 16) & 0xFF
-      ..[1] = (value >> 8) & 0xFF
-      ..[2] = value & 0xFF;
-  }
-
-  int toUint32() {
-    return value;
-  }
-}
-
 abstract class BaseDtlsMessage {
   ContentType getContentType();
   Uint8List encode();

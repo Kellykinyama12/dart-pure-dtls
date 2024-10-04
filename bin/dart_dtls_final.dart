@@ -7,10 +7,11 @@ import 'package:dart_dtls_final/handshake_manager2.dart';
 
 void main() async {
   // Bind the socket to any available address and port
-  final socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 4444);
+  final socket =
+      await RawDatagramSocket.bind(InternetAddress("127.0.0.1"), 4444);
 
   HandshakeManager handshakeManager = HandshakeManager();
-  HandshakeContext context = HandshakeContext();
+  HandshakeContext? context;
   print(
       'Datagram socket ready to send and receive data on ${socket.address.address}:${socket.port}');
 
@@ -22,7 +23,14 @@ void main() async {
         if (datagram != null) {
           print(
               'Received ${datagram.data.length} bytes from ${datagram.address.address}:${datagram.port}');
-          handshakeManager.processIncomingMessage(context, datagram.data);
+          if (context == null) {
+            context = HandshakeContext(
+                conn: socket, addr: datagram.address, port: datagram.port);
+
+            handshakeManager.processIncomingMessage(context!, datagram.data);
+          } else {
+            handshakeManager.processIncomingMessage(context!, datagram.data);
+          }
         }
         break;
       case RawSocketEvent.write:

@@ -10,12 +10,13 @@ import 'package:dart_dtls_final/record_header.dart';
 
 class HandshakeContext {
   // Client IP and Port
-  late InternetAddress addr;
+  InternetAddress addr;
+  int port;
   // Server UDP listener connection
-  late RawDatagramSocket conn;
+  RawDatagramSocket conn;
   late String clientUfrag;
   late String expectedFingerprintHash;
-  late DTLSState dtlsState;
+  DTLSState dtlsState = DTLSState.New;
   void Function(DTLSState)? onDTLSStateChangeHandler;
 
   late Uint8List protocolVersion;
@@ -39,25 +40,27 @@ class HandshakeContext {
   late bool useExtendedMasterSecret;
 
   Map<HandshakeType, Uint8List> handshakeMessagesReceived = {};
-  late Map<HandshakeType, Uint8List> handshakeMessagesSent;
+  late Map<HandshakeType, Uint8List> handshakeMessagesSent = {};
 
   int clientEpoch = 0;
   late int clientSequenceNumber;
-  late int serverEpoch;
-  late int serverSequenceNumber;
-  late int serverHandshakeSequenceNumber;
+  int serverEpoch = 0;
+  int serverSequenceNumber = 0;
+  int serverHandshakeSequenceNumber = 0;
 
   late Uint8List cookie;
-  late Flight flight;
+  Flight flight = Flight.Flight0;
 
   Uint8List? keyingMaterialCache;
 
-  HandshakeContext({
-    this.onDTLSStateChangeHandler,
-    this.cipherSuite,
-    this.gcm,
-    this.keyingMaterialCache,
-  });
+  HandshakeContext(
+      {this.onDTLSStateChangeHandler,
+      this.cipherSuite,
+      this.gcm,
+      this.keyingMaterialCache,
+      required this.conn,
+      required this.addr,
+      required this.port});
 
   void increaseServerEpoch() {
     serverEpoch++;

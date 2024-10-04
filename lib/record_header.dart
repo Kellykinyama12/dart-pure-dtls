@@ -1,10 +1,25 @@
 import 'dart:typed_data';
 
+// enum ContentType {
+//   ChangeCipherSpec,
+//   Alert,
+//   Handshake,
+//   ApplicationData,
+// }
 enum ContentType {
-  ChangeCipherSpec,
-  Alert,
-  Handshake,
-  ApplicationData,
+  ChangeCipherSpec(20),
+  Alert(21),
+  Handshake(22),
+  ApplicationData(23),
+  unknown(255);
+
+  const ContentType(this.value);
+
+  final int value;
+
+  factory ContentType.fromInt(int key) {
+    return values.firstWhere((element) => element.value == key);
+  }
 }
 
 extension ContentTypeExtension on ContentType {
@@ -99,7 +114,8 @@ class RecordHeader {
 
   static (RecordHeader, int, bool?) decode(
       Uint8List buf, int offset, int arrayLen) {
-    final contentType = ContentType.values[buf[offset] - 20];
+    //print("content type int: ${buf[offset]}");
+    final contentType = ContentType.fromInt(buf[offset]);
     offset++;
     final version = DtlsVersion.values.firstWhere((v) =>
         v.value ==
@@ -114,11 +130,11 @@ class RecordHeader {
     final length =
         ByteData.sublistView(buf, offset, offset + 2).getUint16(0, Endian.big);
     offset += 2;
-    print("""{contentType: $contentType,
-      version: $version,
-      epoch: $epoch,
-      sequenceNumber: $sequenceNumber,
-      length: $length}""");
+    // print("""{contentType: $contentType,
+    //   version: $version,
+    //   epoch: $epoch,
+    //   sequenceNumber: $sequenceNumber,
+    //   length: $length}""");
     return (
       RecordHeader(
         contentType: contentType,
