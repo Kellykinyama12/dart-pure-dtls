@@ -97,7 +97,8 @@ class RecordHeader {
     return result;
   }
 
-  static RecordHeader decode(Uint8List buf, int offset, int arrayLen) {
+  static (RecordHeader, int, bool?) decode(
+      Uint8List buf, int offset, int arrayLen) {
     final contentType = ContentType.values[buf[offset] - 20];
     offset++;
     final version = DtlsVersion.values.firstWhere((v) =>
@@ -118,12 +119,16 @@ class RecordHeader {
       epoch: $epoch,
       sequenceNumber: $sequenceNumber,
       length: $length}""");
-    return RecordHeader(
-      contentType: contentType,
-      version: version,
-      epoch: epoch,
-      sequenceNumber: sequenceNumber,
-      length: length,
+    return (
+      RecordHeader(
+        contentType: contentType,
+        version: version,
+        epoch: epoch,
+        sequenceNumber: sequenceNumber,
+        length: length,
+      ),
+      offset,
+      null
     );
   }
 }

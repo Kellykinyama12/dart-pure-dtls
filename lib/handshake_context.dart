@@ -18,7 +18,7 @@ class HandshakeContext {
   late DTLSState dtlsState;
   void Function(DTLSState)? onDTLSStateChangeHandler;
 
-  late DtlsVersion protocolVersion;
+  late Uint8List protocolVersion;
   CipherSuite? cipherSuite;
   late CurveType curveType;
   late Curve curve;

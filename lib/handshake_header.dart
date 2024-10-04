@@ -65,6 +65,10 @@ class Uint24 {
       ..[1] = (value >> 8) & 0xFF
       ..[2] = value & 0xFF;
   }
+
+  int intVal() {
+    return value;
+  }
 }
 
 class HandshakeHeader {
@@ -73,14 +77,15 @@ class HandshakeHeader {
   int messageSequence;
   Uint24 fragmentOffset;
   Uint24 fragmentLength;
+  int? intFragmented;
 
-  HandshakeHeader({
-    required this.handshakeType,
-    required this.length,
-    required this.messageSequence,
-    required this.fragmentOffset,
-    required this.fragmentLength,
-  });
+  HandshakeHeader(
+      {required this.handshakeType,
+      required this.length,
+      required this.messageSequence,
+      required this.fragmentOffset,
+      required this.fragmentLength,
+      this.intFragmented});
 
   @override
   String toString() {
@@ -97,7 +102,8 @@ class HandshakeHeader {
     return result;
   }
 
-  static HandshakeHeader decode(Uint8List buf, int offset, int arrayLen) {
+  static (HandshakeHeader, int, bool?) decode(
+      Uint8List buf, int offset, int arrayLen) {
     final handshakeType = HandshakeType.values[buf[offset]];
     offset++;
     final length = Uint24.fromBytes(buf.sublist(offset, offset + 3));
@@ -109,12 +115,22 @@ class HandshakeHeader {
     offset += 3;
     final fragmentLength = Uint24.fromBytes(buf.sublist(offset, offset + 3));
     offset += 3;
-    return HandshakeHeader(
-      handshakeType: handshakeType,
-      length: length,
-      messageSequence: messageSequence,
-      fragmentOffset: fragmentOffset,
-      fragmentLength: fragmentLength,
+
+    print("""{handshakeType: $handshakeType,
+        length: ${length.value},
+        messageSequence: $messageSequence,
+        fragmentOffset: ${fragmentOffset.value},
+        fragmentLength: ${fragmentLength.value},}""");
+    return (
+      HandshakeHeader(
+          handshakeType: handshakeType,
+          length: length,
+          messageSequence: messageSequence,
+          fragmentOffset: fragmentOffset,
+          fragmentLength: fragmentLength,
+          intFragmented: fragmentLength.intVal()),
+      offset,
+      null
     );
   }
 }

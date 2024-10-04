@@ -7,7 +7,7 @@ import 'package:dart_dtls_final/handshake_header.dart';
 import 'package:dart_dtls_final/record_header.dart';
 
 class ClientHello {
-  late DtlsVersion version;
+  late Uint8List version;
   late Random random;
   late Uint8List cookie;
   late Uint8List sessionId;
@@ -48,8 +48,9 @@ class ClientHello {
   }
 
   int decode(Uint8List buf, int offset, int arrayLen) {
-    version = DtlsVersion.values[
-        ByteData.sublistView(buf, offset, offset + 2).getUint16(0, Endian.big)];
+    // version = DtlsVersion.values[
+    //     ByteData.sublistView(buf, offset, offset + 2).getUint16(0, Endian.big)];
+    version = buf.sublist(offset, offset + 2);
     offset += 2;
 
     random = Random.decode(buf, offset, arrayLen);

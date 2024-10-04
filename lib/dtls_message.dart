@@ -73,8 +73,9 @@ Future<DecodeDtlsMessageResult> decodeDtlsMessage(
   if (arrayLen < 1) {
     throw ArgumentError(DtlsErrors.errIncompleteDtlsMessage);
   }
-  final header = RecordHeader.decode(buf, offset, arrayLen);
-  offset += header.length;
+  final (header, decodedOffset, err) =
+      RecordHeader.decode(buf, offset, arrayLen);
+  offset = decodedOffset;
 
   if (header.epoch < context.clientEpoch) {
     // Ignore incoming message
@@ -99,14 +100,16 @@ Future<DecodeDtlsMessageResult> decodeDtlsMessage(
     case ContentType.Handshake:
       if (decryptedBytes == null) {
         final offsetBackup = offset;
-        final handshakeHeader = HandshakeHeader.decode(buf, offset, arrayLen);
-        offset += handshakeHeader.length as int;
+        final (handshakeHeader, decodedOffset, err) =
+            HandshakeHeader.decode(buf, offset, arrayLen);
 
-        if (handshakeHeader.length != handshakeHeader.fragmentLength) {
+        offset += decodedOffset;
+
+        if (handshakeHeader.length.value !=
+            handshakeHeader.fragmentLength.value) {
           // Ignore fragmented packets
           print('Ignore fragmented packets: ${header.contentType}');
-          return DecodeDtlsMessageResult(null, null, null,
-              (offset + (handshakeHeader.fragmentLength as int)));
+          return DecodeDtlsMessageResult(null, null, null, offset);
         }
 
         final result = await decodeHandshake(
@@ -117,7 +120,7 @@ Future<DecodeDtlsMessageResult> decodeDtlsMessage(
 
         return DecodeDtlsMessageResult(header, handshakeHeader, result, offset);
       } else {
-        final handshakeHeader =
+        final (handshakeHeader, decodedOffset, err) =
             HandshakeHeader.decode(decryptedBytes, 0, decryptedBytes.length);
         final result = await decodeHandshake(
             header, handshakeHeader, decryptedBytes, 0, decryptedBytes.length);
