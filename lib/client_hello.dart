@@ -11,7 +11,7 @@ class ClientHello {
   late Random random;
   late Uint8List cookie;
   late Uint8List sessionId;
-  late List<CipherSuiteID> cipherSuiteIDs;
+  late List<intCipherSuiteID> cipherSuiteIDs;
   late Uint8List compressionMethodIDs;
   late Map<ExtensionType, Extension> extensions;
 
@@ -47,13 +47,16 @@ class ClientHello {
     return Uint8List(0);
   }
 
-  int decode(Uint8List buf, int offset, int arrayLen) {
+  (int, bool?) decode(Uint8List buf, int offset, int arrayLen) {
     // version = DtlsVersion.values[
     //     ByteData.sublistView(buf, offset, offset + 2).getUint16(0, Endian.big)];
     version = buf.sublist(offset, offset + 2);
     offset += 2;
 
-    random = Random.decode(buf, offset, arrayLen);
+    var (decodedRandom, decodeOffset, err) =
+        Random.decode(buf, offset, arrayLen);
+    //offset = decodeOffset;
+    random = decodedRandom;
     offset += Random.randomBytesLength + 4;
 
     final sessionIdLength = buf[offset];
@@ -67,8 +70,16 @@ class ClientHello {
     cookie = Uint8List.fromList(buf.sublist(offset, offset + cookieLength));
     offset += cookieLength;
 
-    cipherSuiteIDs = decodeCipherSuiteIDs(buf, offset, arrayLen);
+    print("cookie: $cookie, length: $cookieLength");
+
+    var (decodedCipherSuiteIDs, decodedOffset, errCipher) =
+        decodeCipherSuiteIDs(buf, offset, arrayLen);
+    cipherSuiteIDs = decodedCipherSuiteIDs;
     offset += 2 + cipherSuiteIDs.length * 2;
+
+    if (errCipher != null) {
+      return (offset, errCipher);
+    }
 
     compressionMethodIDs = decodeCompressionMethodIDs(buf, offset, arrayLen);
     offset += 1 + compressionMethodIDs.length;
@@ -77,22 +88,56 @@ class ClientHello {
     offset += 2 +
         extensions.values.fold(0, (sum, ext) => sum + ext.encode().length + 4);
 
-    return offset;
+    return (offset, null);
   }
 
-  List<CipherSuiteID> decodeCipherSuiteIDs(
+  int uint16(Uint8List b) {
+    // https://stackoverflow.com/questions/45000982/convert-3-bytes-to-int-in-go
+    //return (b[2]) | (b[1]) << 8 | (b[0]) << 16;
+
+    if (b.length != 2) {
+      throw ArgumentError("Incorrect length");
+    }
+    var data = b.sublist(0);
+    var buffer = data.buffer;
+    var bytes = ByteData.view(buffer);
+    return bytes.getUint16(0);
+  }
+
+  (List<intCipherSuiteID>, int, bool?) decodeCipherSuiteIDs(
       Uint8List buf, int offset, int arrayLen) {
-    final length =
-        ByteData.sublistView(buf, offset, offset + 2).getUint16(0, Endian.big);
-    final count = length ~/ 2;
+    // final length =
+    //     ByteData.sublistView(buf, offset, offset + 2).getUint16(0, Endian.big);
+    // final count = length ~/ 2;
+    // offset += 2;
+    // return (
+    //   List<intCipherSuiteID>.generate(count, (i) {
+    //     final id = ByteData.sublistView(buf, offset, offset + 2)
+    //         .getUint16(0, Endian.big);
+    //     offset += 2;
+    //     return id;
+    //   }),
+    //   offset,
+    //   null
+    // );
+
+    var length = uint16(buf.sublist(offset, offset + 2));
+
+    var count = length ~/ 2;
     offset += 2;
-    return List<CipherSuiteID>.generate(count, (i) {
-      final id = CipherSuiteID.values[
-          ByteData.sublistView(buf, offset, offset + 2)
-              .getUint16(0, Endian.big)];
-      offset += 2;
-      return id;
-    });
+
+    print("cipher suites length: $count");
+    List<intCipherSuiteID> result = [];
+    for (int i = 0; i < count; i++) {
+      try {
+        result.add(uint16(buf.sublist(offset, offset + 2)));
+        print("Cipher suit id: ${result[i]}");
+        offset += 2;
+      } catch (e) {
+        return (result, offset, true);
+      }
+    }
+    return (result, offset, null);
   }
 
   Uint8List decodeCompressionMethodIDs(
@@ -130,7 +175,7 @@ class Random {
     }
   }
 
-  static Random decode(Uint8List buf, int offset, int arrayLen) {
+  static (Random, int, bool?) decode(Uint8List buf, int offset, int arrayLen) {
     final gmtUnixTime = DateTime.fromMillisecondsSinceEpoch(
       ByteData.sublistView(buf, offset, offset + 4).getUint32(0, Endian.big) *
           1000,
@@ -140,7 +185,7 @@ class Random {
     final randomBytes =
         Uint8List.fromList(buf.sublist(offset, offset + randomBytesLength));
     offset += randomBytesLength;
-    return Random(gmtUnixTime, randomBytes);
+    return (Random(gmtUnixTime, randomBytes), offset, null);
   }
 }
 

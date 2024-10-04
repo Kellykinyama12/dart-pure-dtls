@@ -148,7 +148,7 @@ Future<DecodeDtlsMessageResult> decodeDtlsMessage(
   }
 }
 
-Future<BaseDtlsMessage> decodeHandshake(
+Future<dynamic> decodeHandshake(
     RecordHeader header,
     HandshakeHeader handshakeHeader,
     Uint8List buf,
@@ -187,7 +187,7 @@ Future<BaseDtlsMessage> decodeHandshake(
     default:
       throw ArgumentError(DtlsErrors.errUnknownDtlsHandshakeType);
   }
-  offset = result.decode(buf, offset, arrayLen);
+  var (decodeOffset, err) = result.decode(buf, offset, arrayLen);
   return result;
 }
 

@@ -38,7 +38,7 @@ class HandshakeContext {
 
   late bool useExtendedMasterSecret;
 
-  late Map<HandshakeType, Uint8List> handshakeMessagesReceived;
+  Map<HandshakeType, Uint8List> handshakeMessagesReceived = {};
   late Map<HandshakeType, Uint8List> handshakeMessagesSent;
 
   int clientEpoch = 0;

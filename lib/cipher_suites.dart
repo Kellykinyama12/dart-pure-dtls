@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'package:pointycastle/export.dart';
 
+typedef intCipherSuiteID = int;
+
 enum CipherSuiteID {
   TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
 }
