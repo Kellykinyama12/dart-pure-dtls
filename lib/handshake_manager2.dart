@@ -169,6 +169,7 @@ class HandshakeManager {
       version: DtlsVersion.v1_2,
       epoch: context.serverEpoch,
       sequenceNumber: sequenceNumber,
+      intSequenceNumber: 0,
       length: encodedMessage.length,
     );
 

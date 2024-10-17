@@ -83,6 +83,7 @@ class RecordHeader {
   DtlsVersion version;
   int epoch;
   Uint8List sequenceNumber;
+  int intSequenceNumber;
   int length;
 
   RecordHeader({
@@ -90,15 +91,16 @@ class RecordHeader {
     required this.version,
     required this.epoch,
     required this.sequenceNumber,
+    required this.intSequenceNumber,
     required this.length,
   });
 
   @override
   String toString() {
-    final seqNum =
-        ByteData.sublistView(Uint8List(8)..setRange(2, 8, sequenceNumber))
-            .getUint64(0, Endian.big);
-    return '[Record Header] Content Type: ${contentType.toString()}, Ver: ${version.toString()}, Epoch: $epoch, SeqNum: $seqNum';
+    // final seqNum =
+    //     ByteData.sublistView(Uint8List(8)..setRange(2, 8, sequenceNumber))
+    //         .getUint64(0, Endian.big);
+    return '[Record Header] Content Type: ${contentType.toString()}, Ver: ${version.toString()}, Epoch: $epoch, SeqNum: $intSequenceNumber';
   }
 
   Uint8List encode() {
@@ -130,6 +132,10 @@ class RecordHeader {
     final length =
         ByteData.sublistView(buf, offset, offset + 2).getUint16(0, Endian.big);
     offset += 2;
+
+    final seqNum =
+        ByteData.sublistView(Uint8List(8)..setRange(2, 8, sequenceNumber))
+            .getUint64(0, Endian.big);
     // print("""{contentType: $contentType,
     //   version: $version,
     //   epoch: $epoch,
@@ -141,6 +147,7 @@ class RecordHeader {
         version: version,
         epoch: epoch,
         sequenceNumber: sequenceNumber,
+        intSequenceNumber: seqNum,
         length: length,
       ),
       offset,

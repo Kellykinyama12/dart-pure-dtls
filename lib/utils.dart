@@ -24,3 +24,9 @@ class Uint24 {
       ..[2] = value & 0xFF;
   }
 }
+
+Uint8List intToUint8List(int value) {
+  var byteData = ByteData(8);
+  byteData.setUint64(0, value, Endian.big);
+  return byteData.buffer.asUint8List();
+}
