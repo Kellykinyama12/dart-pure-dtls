@@ -55,7 +55,7 @@ void main() {
     intSequenceNumber: 18,
     length: 1,
   );
-  print("Deocode recorder header: $recordHeader");
+  print("Decoded recorder header: $recordHeader");
 
   print("Wanted recorder header: $testRecordHeader");
 }

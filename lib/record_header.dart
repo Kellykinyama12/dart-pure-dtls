@@ -100,7 +100,7 @@ class RecordHeader {
     // final seqNum =
     //     ByteData.sublistView(Uint8List(8)..setRange(2, 8, sequenceNumber))
     //         .getUint64(0, Endian.big);
-    return '[Record Header] Content Type: ${contentType.toString()}, Ver: ${version.toString()}, Epoch: $epoch, SeqNum: $intSequenceNumber';
+    return '[Record Header] Content Type: ${contentType.toString()}, Ver: ${version.toString()}, Epoch: $epoch, SeqNum: $intSequenceNumber, content length: $length';
   }
 
   Uint8List encode() {
