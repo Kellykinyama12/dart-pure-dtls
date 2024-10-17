@@ -5,6 +5,8 @@ import 'package:dart_dtls_final/cipher_suites.dart';
 import 'package:dart_dtls_final/extensions.dart';
 import 'package:dart_dtls_final/handshake_header.dart';
 import 'package:dart_dtls_final/record_header.dart';
+import 'package:dart_dtls_final/simple_extensions.dart';
+import 'package:dart_dtls_final/utils.dart';
 
 class ClientHello {
   late Uint8List version;
@@ -13,24 +15,24 @@ class ClientHello {
   late Uint8List sessionId;
   late List<intCipherSuiteID> cipherSuiteIDs;
   late Uint8List compressionMethodIDs;
-  late Map<ExtensionType, Extension> extensions;
+  late Map<ExtensionType, dynamic> extensions;
 
   ClientHello();
 
   @override
   String toString() {
-    final extensionsStr =
-        extensions.values.map((ext) => ext.toString()).toList();
-    final cipherSuiteIDsStr =
-        cipherSuiteIDs.map((cs) => cs.toString()).toList();
-    final cookieStr = cookie.isEmpty
-        ? '<nil>'
-        : '0x${cookie.map((b) => b.toRadixString(16).padLeft(2, '0')).join()}';
+    // final extensionsStr =
+    //     extensions.values.map((ext) => ext.toString()).toList();
+    // final cipherSuiteIDsStr =
+    //     cipherSuiteIDs.map((cs) => cs.toString()).toList();
+    // final cookieStr = cookie.isEmpty
+    //     ? '<nil>'
+    //     : '0x${cookie.map((b) => b.toRadixString(16).padLeft(2, '0')).join()}';
 
     return [
-      '[ClientHello] Ver: ${version.toString()}, Cookie: $cookieStr, SessionID: ${sessionId.length}',
-      'Cipher Suite IDs: ${cipherSuiteIDsStr.join(', ')}',
-      'Extensions: ${extensionsStr.join(', ')}',
+      '[ClientHello] Ver: ${version.toString()}, Cookie: $cookie, SessionID: ${sessionId.length}',
+      'Cipher Suite IDs: ${cipherSuiteIDs}',
+      'Extensions: ${extensions}',
     ].join('\n');
   }
 
@@ -84,11 +86,20 @@ class ClientHello {
     compressionMethodIDs = decodeCompressionMethodIDs(buf, offset, arrayLen);
     offset += 1 + compressionMethodIDs.length;
 
-    extensions = decodeExtensionMap(buf, offset, arrayLen);
-    offset += 2 +
-        extensions.values.fold(0, (sum, ext) => sum + ext.encode().length + 4);
+    var exts;
+    (exts, offset, err) = DecodeExtensionMap(buf, offset, arrayLen);
+    if (err != null) {
+      return (offset, err);
+    }
+    extensions = exts;
 
     return (offset, null);
+
+    // extensions = DecodeExtensionMap(buf, offset, arrayLen);
+    // offset += 2 +
+    //     extensions.values.fold(0, (sum, ext) => sum + ext.encode().length + 4);
+
+    // return (offset, null);
   }
 
   int uint16(Uint8List b) {
@@ -197,54 +208,93 @@ class Random {
 //   String toString();
 // }
 
-Map<ExtensionType, Extension> decodeExtensionMap(
-    Uint8List buf, int offset, int arrayLen) {
-  final result = <ExtensionType, Extension>{};
-  final length =
-      ByteData.sublistView(buf, offset, offset + 2).getUint16(0, Endian.big);
+// Map<ExtensionType, Extension> decodeExtensionMap(
+//     Uint8List buf, int offset, int arrayLen) {
+//   final result = <ExtensionType, Extension>{};
+//   final length =
+//       ByteData.sublistView(buf, offset, offset + 2).getUint16(0, Endian.big);
+//   offset += 2;
+//   final offsetBackup = offset;
+//   while (offset < offsetBackup + length && offset < arrayLen) {
+//     final extensionType = ExtensionType.values[
+//         ByteData.sublistView(buf, offset, offset + 2).getUint16(0, Endian.big)];
+//     offset += 2;
+//     final extensionLength =
+//         ByteData.sublistView(buf, offset, offset + 2).getUint16(0, Endian.big);
+//     offset += 2;
+//     Extension extension;
+//     switch (extensionType) {
+//       // Add your extension decoding logic here
+//       default:
+//         extension = ExtUnknown(extensionType, extensionLength);
+//     }
+//     extension.decode(extensionLength, buf, offset, arrayLen);
+//     result[extensionType] = extension;
+//     offset += extensionLength;
+//   }
+//   return result;
+// }
+
+dynamic DecodeExtensionMap(Uint8List buf, int offset, int arrayLen)
+//(map[ExtensionType]Extension, int, error)
+{
+  Map<ExtensionType, dynamic> result = {};
+  var length = uint16(buf.sublist(offset, offset + 2));
   offset += 2;
-  final offsetBackup = offset;
+  var offsetBackup = offset;
   while (offset < offsetBackup + length) {
-    final extensionType = ExtensionType.values[
-        ByteData.sublistView(buf, offset, offset + 2).getUint16(0, Endian.big)];
+    var extensionType =
+        ExtensionType.fromInt(uint16(buf.sublist(offset, offset + 2)));
     offset += 2;
-    final extensionLength =
-        ByteData.sublistView(buf, offset, offset + 2).getUint16(0, Endian.big);
+    var extensionLength = uint16(buf.sublist(offset, offset + 2));
     offset += 2;
-    Extension extension;
+    var extension;
     switch (extensionType) {
-      // Add your extension decoding logic here
+      case ExtensionType.UseExtendedMasterSecret:
+        extension = ExtUseExtendedMasterSecret();
+      case ExtensionType.UseSRTP:
+        extension = ExtUseSRTP();
+      case ExtensionType.SupportedPointFormats:
+        extension = ExtSupportedPointFormats();
+      case ExtensionType.SupportedEllipticCurves:
+        extension = ExtSupportedEllipticCurves();
       default:
         extension = ExtUnknown(extensionType, extensionLength);
     }
-    extension.decode(extensionLength, buf, offset, arrayLen);
-    result[extensionType] = extension;
+    if (extension != null) {
+      var err = extension.Decode(extensionLength, buf, offset, arrayLen);
+
+      if (err != null) {
+        return (null, offset, err);
+      }
+      result[extensionType] = extension;
+    }
     offset += extensionLength;
   }
-  return result;
+  return (result, offset, null);
 }
 
-class ExtUnknown implements Extension {
-  ExtensionType type;
-  int dataLength;
+// class ExtUnknown implements Extension {
+//   ExtensionType type;
+//   int dataLength;
 
-  ExtUnknown(this.type, this.dataLength);
+//   ExtUnknown(this.type, this.dataLength);
 
-  @override
-  ExtensionType getExtensionType() => ExtensionType.Unknown;
+//   @override
+//   ExtensionType getExtensionType() => ExtensionType.Unknown;
 
-  @override
-  Uint8List encode() {
-    throw UnsupportedError('ExtUnknown cannot be encoded, it\'s readonly');
-  }
+//   @override
+//   Uint8List encode() {
+//     throw UnsupportedError('ExtUnknown cannot be encoded, it\'s readonly');
+//   }
 
-  @override
-  void decode(int extensionLength, Uint8List buf, int offset, int arrayLen) {
-    // No decoding needed for this extension
-  }
+//   @override
+//   void decode(int extensionLength, Uint8List buf, int offset, int arrayLen) {
+//     // No decoding needed for this extension
+//   }
 
-  @override
-  String toString() {
-    return '[Unknown Extension Type] Ext Type: ${type.index}, Data: $dataLength bytes';
-  }
-}
+//   @override
+//   String toString() {
+//     return '[Unknown Extension Type] Ext Type: ${type.index}, Data: $dataLength bytes';
+//   }
+// }

@@ -1,5 +1,11 @@
 import 'dart:typed_data';
 
+typedef SRTPProtectionProfile = int;
+
+typedef PointFormat = int;
+
+typedef Curve = int;
+
 class Uint24 {
   final int value;
 
@@ -29,4 +35,17 @@ Uint8List intToUint8List(int value) {
   var byteData = ByteData(8);
   byteData.setUint64(0, value, Endian.big);
   return byteData.buffer.asUint8List();
+}
+
+int uint16(Uint8List b) {
+  // https://stackoverflow.com/questions/45000982/convert-3-bytes-to-int-in-go
+  //return (b[2]) | (b[1]) << 8 | (b[0]) << 16;
+
+  if (b.length != 2) {
+    throw ArgumentError("Incorrect length");
+  }
+  var data = b.sublist(0);
+  var buffer = data.buffer;
+  var bytes = ByteData.view(buffer);
+  return bytes.getUint16(0);
 }

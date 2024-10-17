@@ -6,7 +6,8 @@ import 'package:dart_dtls_final/handshake_header.dart';
 
 import 'dart:math' as dmath;
 
-import 'package:dart_dtls_final/record_header.dart'; // Import the dart:math library
+import 'package:dart_dtls_final/record_header.dart';
+import 'package:dart_dtls_final/simple_extensions.dart'; // Import the dart:math library
 
 class ServerHello {
   late DtlsVersion version;
