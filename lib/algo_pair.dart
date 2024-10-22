@@ -1,28 +1,28 @@
 import 'dart:typed_data';
 
 class AlgoPair {
-  HashAlgorithm hashAlgorithm;
-  SignatureAlgorithm signatureAlgorithm;
+  late int hashAlgorithm;
+  late int signatureAlgorithm;
 
-  AlgoPair(this.hashAlgorithm, this.signatureAlgorithm);
+  AlgoPair();
 
   @override
   String toString() {
-    return '{HashAlg: ${hashAlgorithm.name} Signature Alg: ${signatureAlgorithm.name}}';
+    return '{HashAlg: ${hashAlgorithm} Signature Alg: ${signatureAlgorithm}}';
   }
 
-  int decode(Uint8List buf, int offset, int arrayLen) {
-    hashAlgorithm = HashAlgorithm.values[buf[offset]];
+  (int, bool?) decode(Uint8List buf, int offset, int arrayLen) {
+    hashAlgorithm = buf[offset];
     offset += 1;
-    signatureAlgorithm = SignatureAlgorithm.values[buf[offset]];
+    signatureAlgorithm = buf[offset];
     offset += 1;
-    return offset;
+    return (offset, null);
   }
 
   Uint8List encode() {
     return Uint8List.fromList([
-      hashAlgorithm.index,
-      signatureAlgorithm.index,
+      hashAlgorithm,
+      signatureAlgorithm,
     ]);
   }
 }

@@ -22,7 +22,6 @@ class HandshakeRandom {
     final randomBytes = reader.read(32);
     return HandshakeRandom(randomBytes);
   }
-}
 
 class CipherSuiteId {
   final int id;

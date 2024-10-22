@@ -33,6 +33,15 @@ void test_handshake_message_hello_verify_request() {
 
   HelloVerifyRequest hvr = HelloVerifyRequest();
   hvr.decode(raw_hello_verify_request, 0, raw_hello_verify_request.length);
+
+  //  version: ProtocolVersion {
+  //           major: 0xFE,
+  //           minor: 0xFF,
+  //       },
+
+  if (hvr.version[0] != 0xFE) {
+    throw 'wrong dtls version: hvr.version';
+  }
   print("Hello verify request: ${hvr}");
 }
 
