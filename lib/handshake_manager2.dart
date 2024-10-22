@@ -73,10 +73,10 @@ class HandshakeManager {
   }
 
   HelloVerifyRequest createDtlsHelloVerifyRequest(HandshakeContext context) {
-    return HelloVerifyRequest(
-      version: context.protocolVersion,
-      cookie: context.cookie,
-    );
+    HelloVerifyRequest hvr = HelloVerifyRequest();
+    hvr.version = context.protocolVersion;
+    hvr.cookie = context.cookie;
+    return hvr;
   }
 
 //   func (m *HandshakeManager) SendMessage(context *HandshakeContext, message BaseDtlsMessage) {

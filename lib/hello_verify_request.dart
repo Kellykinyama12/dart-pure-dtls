@@ -4,10 +4,10 @@ import 'package:dart_dtls_final/handshake_header.dart';
 import 'package:dart_dtls_final/record_header.dart';
 
 class HelloVerifyRequest {
-  Uint8List version;
-  Uint8List cookie;
+  late Uint8List version;
+  late Uint8List cookie;
 
-  HelloVerifyRequest({required this.version, required this.cookie});
+  HelloVerifyRequest();
 
   @override
   String toString() {

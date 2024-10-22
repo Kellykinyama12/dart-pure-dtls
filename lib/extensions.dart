@@ -300,6 +300,11 @@ class ExtSupportedEllipticCurves {
 
     return null;
   }
+
+  @override
+  String toString() {
+    return Curves.toString();
+  }
 }
 
 // ExtUnknown is not for processing. It is only for debugging purposes.
