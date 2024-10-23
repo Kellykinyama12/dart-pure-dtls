@@ -37,6 +37,12 @@ Uint8List intToUint8List(int value) {
   return byteData.buffer.asUint8List();
 }
 
+Uint8List uint16ToUint8List(int value) {
+  var byteData = ByteData(2);
+  byteData.setUint16(0, value, Endian.big);
+  return byteData.buffer.asUint8List();
+}
+
 int uint16(Uint8List b) {
   // https://stackoverflow.com/questions/45000982/convert-3-bytes-to-int-in-go
   //return (b[2]) | (b[1]) << 8 | (b[0]) << 16;

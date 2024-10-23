@@ -43,6 +43,7 @@ class HandshakeManager {
             context.flight = Flight.Flight2;
             final helloVerifyRequestResponse =
                 createDtlsHelloVerifyRequest(context);
+            print("Hello verify request response: $helloVerifyRequestResponse");
             sendMessage(context, helloVerifyRequestResponse);
             return;
           case Flight.Flight2:

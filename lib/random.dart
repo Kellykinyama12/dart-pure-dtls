@@ -23,13 +23,22 @@ class DtlsRandom {
   {
     List<int> result = [];
 
-    int time = DateTime.now().microsecondsSinceEpoch;
+    int time = DateTime.now().microsecondsSinceEpoch ~/ 1000;
+    GMTUnixTime = time;
 
     //binary.BigEndian.PutUint32(result[0:4], uint32(r.GMTUnixTime.Unix()))
     result.addAll(uint32toUint8List(time));
     result.addAll(RandomBytes);
     return Uint8List.fromList(result);
   }
+
+//   func (r *Random) Encode() []byte {
+// 	result := make([]byte, 4+RandomBytesLength)
+
+// 	binary.BigEndian.PutUint32(result[0:4], uint32(r.GMTUnixTime.Unix()))
+// 	copy(result[4:], r.RandomBytes[:])
+// 	return result
+// }
 
   @override
   String toString() {

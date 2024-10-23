@@ -210,6 +210,7 @@
 import 'dart:typed_data';
 
 import 'package:dart_dtls_final/client_hello.dart';
+import 'package:dart_dtls_final/dtls_rand.dart';
 import 'package:dart_dtls_final/extensions.dart';
 import 'package:dart_dtls_final/random.dart';
 import 'package:dart_dtls_final/utils.dart';
@@ -259,6 +260,55 @@ class ServerHello {
     }
     extensions = extensionsMap;
     return (offset, null);
+  }
+
+  // Uint8List encode() {
+  //   final result = Uint8List((4 + randomBytesLength).toInt());
+  //   final byteData = ByteData.sublistView(result);
+  //   byteData.setUint32(
+  //       0, random!.GMTUnixTime!, Endian.big);
+  //   result.setRange(4, 4 + randomBytesLength, random!.RandomBytes);
+  //   return result;
+  // }
+
+  Uint8List encode() {
+    final result = BytesBuilder();
+    final byteData = ByteData(2);
+    byteData.setUint16(0, version!, Endian.big);
+    result.add(byteData.buffer.asUint8List());
+    result.add(random!.Encode());
+
+    result.add(Uint8List.fromList([SessionID!.length]));
+    result.add(SessionID!);
+
+    byteData.setUint16(0, cipherSuiteID!, Endian.big);
+    result.add(byteData.buffer.asUint8List());
+
+    result.add(Uint8List.fromList([compressionMethodID!]));
+
+    final encodedExtensions = encodeExtensionMap(extensions);
+    result.add(encodedExtensions);
+
+    return result.toBytes();
+  }
+
+  Uint8List encodeExtensionMap(Map<ExtensionType, dynamic> extensionMap) {
+    final encodedBody = BytesBuilder();
+    for (final extension in extensionMap.values) {
+      final encodedExtension = extension.encode();
+      final byteData = ByteData(2);
+      byteData.setUint16(0, extension.getExtensionType().index, Endian.big);
+      encodedBody.add(byteData.buffer.asUint8List());
+      byteData.setUint16(0, encodedExtension.length, Endian.big);
+      encodedBody.add(byteData.buffer.asUint8List());
+      encodedBody.add(encodedExtension);
+    }
+    final result = BytesBuilder();
+    final byteData = ByteData(2);
+    byteData.setUint16(0, encodedBody.length, Endian.big);
+    result.add(byteData.buffer.asUint8List());
+    result.add(encodedBody.toBytes());
+    return result.toBytes();
   }
 
   @override

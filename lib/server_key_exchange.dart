@@ -166,6 +166,21 @@ class ServerKeyExchange {
     return (offset, null);
   }
 
+  Uint8List encode() {
+    final result = BytesBuilder();
+    result.add(Uint8List.fromList([ellipticCurveType!]));
+    final byteData = ByteData(2);
+    byteData.setUint16(0, namedCurve!, Endian.big);
+    result.add(byteData.buffer.asUint8List());
+    result.add(Uint8List.fromList([publicKey!.length]));
+    result.add(publicKey!);
+    result.add(algoPair!.encode());
+    byteData.setUint16(0, signature!.length, Endian.big);
+    result.add(byteData.buffer.asUint8List());
+    result.add(signature!);
+    return result.toBytes();
+  }
+
   @override
   String toString() {
     // TODO: implement toString
