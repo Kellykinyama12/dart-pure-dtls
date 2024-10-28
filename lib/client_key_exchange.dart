@@ -31,9 +31,14 @@ class ClientKeyExchange {
   }
 
   Uint8List encode() {
-    final result = Uint8List(1 + publicKey.length);
-    result[0] = publicKey.length;
-    result.setRange(1, result.length, publicKey);
-    return result;
+    final buffer = BytesBuilder();
+
+    // Encode the length of the public key
+    buffer.addByte(publicKey.length);
+
+    // Encode the public key itself
+    buffer.add(publicKey);
+
+    return buffer.toBytes();
   }
 }

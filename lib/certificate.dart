@@ -43,13 +43,26 @@ class Certificate {
   }
 
   Uint8List encode() {
-    final encodedCertificates = <int>[];
-    for (final certificate in certificates) {
-      final certificateLength = Uint24.fromUInt32(certificate.length);
-      encodedCertificates.addAll(certificateLength.toBytes());
-      encodedCertificates.addAll(certificate);
+    final buffer = BytesBuilder();
+
+    // Calculate the total length of all certificates
+    int totalLength =
+        certificates.fold(0, (sum, cert) => sum + 3 + cert.length);
+
+    // Encode the total length as a 3-byte integer
+    final totalLengthBytes = Uint24(totalLength).toBytes();
+    buffer.add(totalLengthBytes);
+
+    // Encode each certificate
+    for (var cert in certificates) {
+      // Encode the length of the certificate as a 3-byte integer
+      final certLengthBytes = Uint24(cert.length).toBytes();
+      buffer.add(certLengthBytes);
+
+      // Encode the certificate itself
+      buffer.add(cert);
     }
-    final length = Uint24.fromUInt32(encodedCertificates.length);
-    return Uint8List.fromList([...length.toBytes(), ...encodedCertificates]);
+
+    return buffer.toBytes();
   }
 }

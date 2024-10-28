@@ -43,19 +43,28 @@ class CertificateRequest {
   }
 
   Uint8List encode() {
-    final encodedCertificateTypes =
-        certificateTypes.map((e) => e.index).toList();
-    final encodedAlgoPairs = algoPairs.expand((e) => e.encode()).toList();
-    final algoPairLength = Uint8List(2)
-      ..buffer.asByteData().setUint16(0, encodedAlgoPairs.length, Endian.big);
+    final buffer = BytesBuilder();
 
-    return Uint8List.fromList([
-      encodedCertificateTypes.length,
-      ...encodedCertificateTypes,
-      ...algoPairLength,
-      ...encodedAlgoPairs,
-      0x00, 0x00, // Distinguished Names Length
-    ]);
+    // Encode certificate types
+    buffer.addByte(certificateTypes.length);
+    for (var type in certificateTypes) {
+      buffer.addByte(type.index);
+    }
+
+    // Encode algorithm pairs
+    final algoPairsBuffer = BytesBuilder();
+    for (var pair in algoPairs) {
+      algoPairsBuffer.add(pair.encode());
+    }
+    final algoPairsLengthBytes = ByteData(2);
+    algoPairsLengthBytes.setUint16(0, algoPairsBuffer.length, Endian.big);
+    buffer.add(algoPairsLengthBytes.buffer.asUint8List());
+    buffer.add(algoPairsBuffer.toBytes());
+
+    // Add a placeholder for Distinguished Names Length (2 bytes)
+    buffer.add(Uint8List(2));
+
+    return buffer.toBytes();
   }
 }
 

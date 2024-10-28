@@ -272,24 +272,35 @@ class ServerHello {
   // }
 
   Uint8List encode() {
-    final result = BytesBuilder();
-    final byteData = ByteData(2);
-    byteData.setUint16(0, version!, Endian.big);
-    result.add(byteData.buffer.asUint8List());
-    result.add(random!.Encode());
+    final buffer = BytesBuilder();
 
-    result.add(Uint8List.fromList([SessionID!.length]));
-    result.add(SessionID!);
+    // Encode version
+    final versionBytes = ByteData(2);
+    versionBytes.setUint16(0, version ?? 0, Endian.big);
+    buffer.add(versionBytes.buffer.asUint8List());
 
-    byteData.setUint16(0, cipherSuiteID!, Endian.big);
-    result.add(byteData.buffer.asUint8List());
+    // Encode random
+    buffer.add(random?.Encode() ?? Uint8List(0));
 
-    result.add(Uint8List.fromList([compressionMethodID!]));
+    // Encode session ID length and session ID
+    buffer.addByte(SessionID?.length ?? 0);
+    if (SessionID != null) {
+      buffer.add(SessionID!);
+    }
 
+    // Encode cipher suite ID
+    final cipherSuiteBytes = ByteData(2);
+    cipherSuiteBytes.setUint16(0, cipherSuiteID ?? 0, Endian.big);
+    buffer.add(cipherSuiteBytes.buffer.asUint8List());
+
+    // Encode compression method ID
+    buffer.addByte(compressionMethodID ?? 0);
+
+    // Encode extensions
     final encodedExtensions = encodeExtensionMap(extensions);
-    result.add(encodedExtensions);
+    buffer.add(encodedExtensions);
 
-    return result.toBytes();
+    return buffer.toBytes();
   }
 
   Uint8List encodeExtensionMap(Map<ExtensionType, dynamic> extensionMap) {

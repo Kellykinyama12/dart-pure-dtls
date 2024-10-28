@@ -104,14 +104,30 @@ class RecordHeader {
   }
 
   Uint8List encode() {
-    final result = Uint8List(7 + sequenceNumberSize);
-    final byteData = ByteData.sublistView(result);
-    result[0] = contentType.index + 20;
-    byteData.setUint16(1, version.value, Endian.big);
-    byteData.setUint16(3, epoch, Endian.big);
-    result.setRange(5, 5 + sequenceNumberSize, sequenceNumber);
-    byteData.setUint16(5 + sequenceNumberSize, length, Endian.big);
-    return result;
+    final buffer = BytesBuilder();
+
+    // Encode content type
+    buffer.addByte(contentType.value);
+
+    // Encode version
+    final versionBytes = ByteData(2);
+    versionBytes.setUint16(0, version.value, Endian.big);
+    buffer.add(versionBytes.buffer.asUint8List());
+
+    // Encode epoch
+    final epochBytes = ByteData(2);
+    epochBytes.setUint16(0, epoch, Endian.big);
+    buffer.add(epochBytes.buffer.asUint8List());
+
+    // Encode sequence number
+    buffer.add(sequenceNumber);
+
+    // Encode length
+    final lengthBytes = ByteData(2);
+    lengthBytes.setUint16(0, length, Endian.big);
+    buffer.add(lengthBytes.buffer.asUint8List());
+
+    return buffer.toBytes();
   }
 
   static (RecordHeader, int, bool?) decode(

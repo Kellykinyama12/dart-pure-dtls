@@ -21,7 +21,13 @@ class ChangeCipherSpec {
     return offset;
   }
 
-  Uint8List encode() {
-    return Uint8List.fromList([0x01]);
-  }
+ Uint8List encode() {
+  final buffer = BytesBuilder();
+
+  // Encode the ChangeCipherSpec data
+  buffer.addByte(1);
+
+  return buffer.toBytes();
+}
+
 }

@@ -11,12 +11,18 @@ class Random {
   Random(this.gmtUnixTime, this.randomBytes);
 
   Uint8List encode() {
-    final result = Uint8List(4 + randomBytesLength);
-    final byteData = ByteData.sublistView(result);
-    byteData.setUint32(
+    final buffer = BytesBuilder();
+
+    // Encode the GMT Unix time as a 4-byte integer
+    final gmtUnixTimeBytes = ByteData(4);
+    gmtUnixTimeBytes.setUint32(
         0, gmtUnixTime.millisecondsSinceEpoch ~/ 1000, Endian.big);
-    result.setRange(4, 4 + randomBytesLength, randomBytes);
-    return result;
+    buffer.add(gmtUnixTimeBytes.buffer.asUint8List());
+
+    // Encode the random bytes
+    buffer.add(randomBytes);
+
+    return buffer.toBytes();
   }
 
   void generate() {

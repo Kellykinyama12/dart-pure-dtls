@@ -255,13 +255,42 @@ class ExtUseExtendedMasterSecret {
   {
     return null;
   }
+
+  Uint8List encode() {
+    return Uint8List(0); // No data to encode for this extension
+  }
 }
 
-class ExtRenegotiationInfo {}
+class ExtRenegotiationInfo {
+  Uint8List encode() {
+    return Uint8List.fromList([0]); // Single byte with value 0
+  }
+}
 
 class ExtUseSRTP {
-  List<SRTPProtectionProfile> ProtectionProfiles = [];
-  Uint8List? Mki; //                []byte
+  List<SRTPProtectionProfile> protectionProfiles = [];
+  Uint8List? mki; //                []byte
+
+  //  Uint8List encode() {
+  //   final buffer = BytesBuilder();
+  //   final protectionProfilesLength = protectionProfiles.length * 2;
+  //   final byteData = ByteData(2);
+  //   byteData.setUint16(0, protectionProfilesLength, Endian.big);
+  //   buffer.add(byteData.buffer.asUint8List());
+
+  //   for (final profile in protectionProfiles) {
+  //     final profileData = ByteData(2);
+  //     profileData.setUint16(0, profile.index, Endian.big);
+  //     buffer.add(profileData.buffer.asUint8List());
+  //   }
+
+  //   buffer.addByte(mki?.length ?? 0);
+  //   if (mki != null) {
+  //     buffer.add(mki!);
+  //   }
+
+  //   return buffer.toBytes();
+  // }
 }
 
 // Only Uncompressed was implemented.
@@ -280,6 +309,15 @@ class ExtSupportedPointFormats {
 
     return null;
   }
+
+  // Uint8List encode() {
+  //   final buffer = BytesBuilder();
+  //   buffer.addByte(pointFormats.length);
+  //   for (var format in pointFormats) {
+  //     buffer.addByte(format.index);
+  //   }
+  //   return buffer.toBytes();
+  // }
 }
 
 // Only X25519 was implemented.
@@ -301,6 +339,21 @@ class ExtSupportedEllipticCurves {
     return null;
   }
 
+  // Uint8List encode() {
+  //   final buffer = BytesBuilder();
+  //   final byteData = ByteData(2);
+  //   byteData.setUint16(0, curves.length * 2, Endian.big);
+  //   buffer.add(byteData.buffer.asUint8List());
+
+  //   for (var curve in curves) {
+  //     final curveData = ByteData(2);
+  //     curveData.setUint16(0, curve.index, Endian.big);
+  //     buffer.add(curveData.buffer.asUint8List());
+  //   }
+
+  //   return buffer.toBytes();
+  // }
+
   @override
   String toString() {
     return Curves.toString();
@@ -318,5 +371,9 @@ class ExtUnknown {
   {
     print("Unknown extension: $Type cannot be decoded");
     return null;
+  }
+
+  Uint8List encode() {
+    throw UnsupportedError('ExtUnknown cannot be encoded, it\'s readonly');
   }
 }

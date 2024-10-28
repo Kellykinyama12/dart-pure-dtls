@@ -139,6 +139,14 @@ class Alert {
   }
 
   Uint8List encode() {
-    return Uint8List.fromList([level.index + 1, description.index]);
+    final buffer = BytesBuilder();
+
+    // Encode alert level
+    buffer.addByte(level.index + 1);
+
+    // Encode alert description
+    buffer.addByte(description.index);
+
+    return buffer.toBytes();
   }
 }

@@ -35,14 +35,18 @@ class CertificateVerify {
   }
 
   Uint8List encode() {
-    final encodedAlgoPair = algoPair.encode();
-    final signatureLength = Uint8List(2)
-      ..buffer.asByteData().setUint16(0, signature.length, Endian.big);
-    return Uint8List.fromList([
-      ...encodedAlgoPair,
-      ...signatureLength,
-      ...signature,
-    ]);
+    final buffer = BytesBuilder();
+
+    // Encode algorithm pair
+    buffer.add(algoPair.encode());
+
+    // Encode signature
+    final signatureLengthBytes = ByteData(2);
+    signatureLengthBytes.setUint16(0, signature.length, Endian.big);
+    buffer.add(signatureLengthBytes.buffer.asUint8List());
+    buffer.add(signature);
+
+    return buffer.toBytes();
   }
 }
 
@@ -56,7 +60,7 @@ class AlgoPair {
 
   @override
   String toString() {
-    return '{HashAlg: ${hashAlgorithm.name} Signature Alg: ${signatureAlgorithm.name}}';
+    return '{HashAlg: ${hashAlgorithm.name}, Signature Alg: ${signatureAlgorithm.name}}';
   }
 
   int decode(Uint8List buf, int offset, int arrayLen) {

@@ -45,8 +45,56 @@ class ClientHello {
   }
 
   Uint8List encode() {
-    // Implement encoding logic
-    return Uint8List(0);
+    final buffer = BytesBuilder();
+
+    // Encode version
+    buffer.add(version);
+
+    // Encode random
+    buffer.add(random.encode());
+
+    // Encode session ID
+    buffer.addByte(sessionId.length);
+    buffer.add(sessionId);
+
+    // Encode cookie
+    buffer.addByte(cookie.length);
+    buffer.add(cookie);
+
+    // Encode cipher suite IDs
+    final cipherSuiteLength = cipherSuiteIDs.length * 2;
+    final cipherSuiteLengthBytes = ByteData(2);
+    cipherSuiteLengthBytes.setUint16(0, cipherSuiteLength, Endian.big);
+    buffer.add(cipherSuiteLengthBytes.buffer.asUint8List());
+    for (var id in cipherSuiteIDs) {
+      final idBytes = ByteData(2);
+      idBytes.setUint16(0, id, Endian.big);
+      buffer.add(idBytes.buffer.asUint8List());
+    }
+
+    // Encode compression method IDs
+    buffer.addByte(compressionMethodIDs.length);
+    buffer.add(compressionMethodIDs);
+
+    // Encode extensions
+    final extensionsBuffer = BytesBuilder();
+    for (var entry in extensions.entries) {
+      final extensionTypeBytes = ByteData(2);
+      extensionTypeBytes.setUint16(0, entry.key.value, Endian.big);
+      extensionsBuffer.add(extensionTypeBytes.buffer.asUint8List());
+
+      final extensionData = entry.value.encode();
+      final extensionLengthBytes = ByteData(2);
+      extensionLengthBytes.setUint16(0, extensionData.length, Endian.big);
+      extensionsBuffer.add(extensionLengthBytes.buffer.asUint8List());
+      extensionsBuffer.add(extensionData);
+    }
+    final extensionsLengthBytes = ByteData(2);
+    extensionsLengthBytes.setUint16(0, extensionsBuffer.length, Endian.big);
+    buffer.add(extensionsLengthBytes.buffer.asUint8List());
+    buffer.add(extensionsBuffer.toBytes());
+
+    return buffer.toBytes();
   }
 
   (int, bool?) decode(Uint8List buf, int offset, int arrayLen) {

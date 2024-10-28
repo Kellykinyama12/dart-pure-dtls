@@ -74,13 +74,26 @@ class HandshakeHeader {
   }
 
   Uint8List encode() {
-    final result = Uint8List(12);
-    result[0] = handshakeType.index;
-    result.setRange(1, 4, length.toBytes());
-    ByteData.sublistView(result).setUint16(4, messageSequence, Endian.big);
-    result.setRange(6, 9, fragmentOffset.toBytes());
-    result.setRange(9, 12, fragmentLength.toBytes());
-    return result;
+    final buffer = BytesBuilder();
+
+    // Encode handshake type
+    buffer.addByte(handshakeType.index);
+
+    // Encode length
+    buffer.add(length.toBytes());
+
+    // Encode message sequence
+    final messageSequenceBytes = ByteData(2);
+    messageSequenceBytes.setUint16(0, messageSequence, Endian.big);
+    buffer.add(messageSequenceBytes.buffer.asUint8List());
+
+    // Encode fragment offset
+    buffer.add(fragmentOffset.toBytes());
+
+    // Encode fragment length
+    buffer.add(fragmentLength.toBytes());
+
+    return buffer.toBytes();
   }
 
   static (HandshakeHeader, int, bool?) decode(

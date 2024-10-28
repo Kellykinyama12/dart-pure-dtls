@@ -167,18 +167,34 @@ class ServerKeyExchange {
   }
 
   Uint8List encode() {
-    final result = BytesBuilder();
-    result.add(Uint8List.fromList([ellipticCurveType!]));
-    final byteData = ByteData(2);
-    byteData.setUint16(0, namedCurve!, Endian.big);
-    result.add(byteData.buffer.asUint8List());
-    result.add(Uint8List.fromList([publicKey!.length]));
-    result.add(publicKey!);
-    result.add(algoPair!.encode());
-    byteData.setUint16(0, signature!.length, Endian.big);
-    result.add(byteData.buffer.asUint8List());
-    result.add(signature!);
-    return result.toBytes();
+    final buffer = BytesBuilder();
+
+    // Encode elliptic curve type
+    buffer.addByte(ellipticCurveType ?? 0);
+
+    // Encode named curve
+    final namedCurveBytes = ByteData(2);
+    namedCurveBytes.setUint16(0, namedCurve ?? 0, Endian.big);
+    buffer.add(namedCurveBytes.buffer.asUint8List());
+
+    // Encode public key length and public key
+    buffer.addByte(publicKey?.length ?? 0);
+    if (publicKey != null) {
+      buffer.add(publicKey!);
+    }
+
+    // Encode algorithm pair
+    buffer.add(algoPair?.encode() ?? Uint8List(0));
+
+    // Encode signature length and signature
+    final signatureLengthBytes = ByteData(2);
+    signatureLengthBytes.setUint16(0, signature?.length ?? 0, Endian.big);
+    buffer.add(signatureLengthBytes.buffer.asUint8List());
+    if (signature != null) {
+      buffer.add(signature!);
+    }
+
+    return buffer.toBytes();
   }
 
   @override

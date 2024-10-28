@@ -40,11 +40,17 @@ class HelloVerifyRequest {
   }
 
   Uint8List encode() {
-    final result = Uint8List(3 + cookie.length);
-    // final byteData = ByteData.sublistView(result);
-    result.setRange(0, 2, version);
-    result[2] = cookie.length;
-    result.setRange(3, result.length, cookie);
-    return result;
+    final buffer = BytesBuilder();
+
+    // Encode version
+    buffer.add(version);
+
+    // Encode cookie length
+    buffer.addByte(cookie.length);
+
+    // Encode cookie
+    buffer.add(cookie);
+
+    return buffer.toBytes();
   }
 }

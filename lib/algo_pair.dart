@@ -20,10 +20,15 @@ class AlgoPair {
   }
 
   Uint8List encode() {
-    return Uint8List.fromList([
-      hashAlgorithm,
-      signatureAlgorithm,
-    ]);
+    final buffer = BytesBuilder();
+
+    // Encode hash algorithm
+    buffer.addByte(hashAlgorithm);
+
+    // Encode signature algorithm
+    buffer.addByte(signatureAlgorithm);
+
+    return buffer.toBytes();
   }
 }
 

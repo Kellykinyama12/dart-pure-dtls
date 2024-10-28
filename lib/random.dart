@@ -18,18 +18,21 @@ class DtlsRandom {
   int? GMTUnixTime;
   Uint8List RandomBytes = generateRandomBytes(RandomBytesLength);
 
-  Uint8List Encode()
-  //[]byte
-  {
-    List<int> result = [];
+  Uint8List Encode() {
+    final buffer = BytesBuilder();
 
-    int time = DateTime.now().microsecondsSinceEpoch ~/ 1000;
-    GMTUnixTime = time;
+    // Encode GMT Unix time
+    final gmtUnixTimeBytes = ByteData(4);
+    gmtUnixTimeBytes.setUint32(
+        0,
+        GMTUnixTime ?? DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        Endian.big);
+    buffer.add(gmtUnixTimeBytes.buffer.asUint8List());
 
-    //binary.BigEndian.PutUint32(result[0:4], uint32(r.GMTUnixTime.Unix()))
-    result.addAll(uint32toUint8List(time));
-    result.addAll(RandomBytes);
-    return Uint8List.fromList(result);
+    // Encode random bytes
+    buffer.add(RandomBytes);
+
+    return buffer.toBytes();
   }
 
 //   func (r *Random) Encode() []byte {
