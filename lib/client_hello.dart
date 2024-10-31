@@ -116,8 +116,10 @@ class ClientHello {
     offset += sessionIdLength;
 
     final cookieLength = buf[offset];
+    print("cookie length: $cookieLength");
     offset++;
-    cookie = Uint8List.fromList(buf.sublist(offset, offset + cookieLength));
+    print("buffer length: ${buf.length - offset}");
+    cookie = buf.sublist(offset, offset + cookieLength);
     offset += cookieLength;
 
     //print("cookie: $cookie, length: $cookieLength");

@@ -47,6 +47,9 @@ Future<DecodeDtlsMessageResult> decodeDtlsMessage(
   }
   final (header, decodedOffset, err) =
       RecordHeader.decode(buf, offset, arrayLen);
+
+  print("Record header: $header");
+
   offset = decodedOffset;
 
   if (header.epoch < context.clientEpoch) {
@@ -56,6 +59,8 @@ Future<DecodeDtlsMessageResult> decodeDtlsMessage(
   }
 
   context.clientEpoch = header.epoch;
+
+  context.protocolVersion = header.versionBytes;
 
   Uint8List? decryptedBytes;
   Uint8List? encryptedBytes;
@@ -110,10 +115,13 @@ Future<DecodeDtlsMessageResult> decodeDtlsMessage(
     case ContentType.Alert:
       final alert = Alert();
       if (decryptedBytes == null) {
-        offset = alert.decode(buf, offset, arrayLen);
+        var (decodedOffset, err) = alert.decode(buf, offset, arrayLen);
       } else {
         alert.decode(decryptedBytes, 0, decryptedBytes.length);
       }
+
+      //context.serverSequenceNumber = 0;
+      //context.flight = Flight.Flight0;
       return DecodeDtlsMessageResult(header, null, alert, offset);
     default:
       throw ArgumentError(DtlsErrors.errUnknownDtlsContentType);
@@ -171,6 +179,12 @@ class DecodeDtlsMessageResult {
 
   DecodeDtlsMessageResult(
       this.recordHeader, this.handshakeHeader, this.message, this.offset);
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return "{record header: $recordHeader, handshake header: $handshakeHeader, message: $message}";
+  }
 }
 
 // class HandshakeHeader {

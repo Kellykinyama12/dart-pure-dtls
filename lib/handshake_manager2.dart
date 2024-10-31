@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:math' as dmath;
 import 'dart:io';
@@ -6,12 +7,13 @@ import 'package:dart_dtls_final/certificate_verify.dart';
 import 'package:dart_dtls_final/client_hello.dart';
 import 'package:dart_dtls_final/client_key_exchange.dart';
 import 'package:dart_dtls_final/dtls_message.dart';
+import 'package:dart_dtls_final/dtls_record.dart';
 import 'package:dart_dtls_final/extensions.dart';
 import 'package:dart_dtls_final/finished.dart';
 import 'package:dart_dtls_final/handshake_context.dart';
 import 'package:collection/collection.dart';
 import 'package:dart_dtls_final/handshake_header.dart';
-import 'package:dart_dtls_final/hello_verify_request.dart';
+//import 'package:dart_dtls_final/hello_verify_request.dart';
 import 'package:dart_dtls_final/record_header.dart';
 import 'package:dart_dtls_final/server_hello.dart';
 import 'package:dart_dtls_final/crypto.dart';
@@ -39,11 +41,13 @@ class HandshakeManager {
           case Flight.Flight0:
             context.setDTLSState(DTLSState.Connecting);
             context.protocolVersion = message.version;
+            //print("context protocol version: ${context.protocolVersion}");
             context.cookie = generateDtlsCookie();
+            //print("context protocol version: ${context.cookie}");
             context.flight = Flight.Flight2;
             final helloVerifyRequestResponse =
                 createDtlsHelloVerifyRequest(context);
-            print("Hello verify request response: $helloVerifyRequestResponse");
+            //print("Hello verify request response: $helloVerifyRequestResponse");
             sendMessage(context, helloVerifyRequestResponse);
             return;
           case Flight.Flight2:
@@ -51,15 +55,25 @@ class HandshakeManager {
               if (message.cookie.isEmpty) {
                 context.flight = Flight.Flight0;
                 print("Empty cookie: ${message.cookie}");
-                return;
+                context.setDTLSState(DTLSState.Connecting);
+                context.protocolVersion = message.version;
+                //print("context protocol version: ${context.protocolVersion}");
+                context.cookie = generateDtlsCookie();
+                //print("context protocol version: ${context.cookie}");
+                context.flight = Flight.Flight2;
+                final helloVerifyRequestResponse =
+                    createDtlsHelloVerifyRequest(context);
+                //print("Hello verify request response: $helloVerifyRequestResponse");
+                sendMessage(context, helloVerifyRequestResponse);
               }
+              print("Received cookie: ${message.cookie}");
             }
           default:
-            print("flight: ${context.flight}");
+            print("Unhandle flight: ${context.flight}");
         }
       default:
         {
-          print("object");
+          print("Unhandle Runtime type: ${decodedMessage.message.runtimeType}");
         }
     }
   }
@@ -74,9 +88,9 @@ class HandshakeManager {
   }
 
   HelloVerifyRequest createDtlsHelloVerifyRequest(HandshakeContext context) {
-    HelloVerifyRequest hvr = HelloVerifyRequest();
-    hvr.version = context.protocolVersion;
-    hvr.cookie = context.cookie;
+    HelloVerifyRequest hvr = HelloVerifyRequest(generateDtlsCookie());
+    // hvr.version = context.protocolVersion;
+    // hvr.cookie = context.cookie;
     return hvr;
   }
 
@@ -137,59 +151,174 @@ class HandshakeManager {
 
   Future<void> sendMessage(HandshakeContext context, dynamic message) async {
     print("sending message...");
-    final encodedMessageBody = message.encode();
+    final Uint8List encodedMessageBody = message.toBytes();
     final encodedMessage = BytesBuilder();
     HandshakeHeader? handshakeHeader;
 
-    print("Content type: ${message.getContentType()}");
+    //print("Content type: ${message.getContentType()}");
+    print("");
     switch (message.getContentType()) {
       case ContentType.Handshake:
-        final handshakeMessage = message;
-        handshakeHeader = HandshakeHeader(
-          handshakeType: handshakeMessage.getHandshakeType(),
-          length: Uint24.fromUInt32(encodedMessageBody.length),
-          messageSequence: context.serverHandshakeSequenceNumber,
-          fragmentOffset: Uint24.fromUInt32(0),
-          fragmentLength: Uint24.fromUInt32(encodedMessageBody.length),
-        );
-        context.increaseServerHandshakeSequence();
-        encodedMessage.add(handshakeHeader.encode());
-        encodedMessage.add(encodedMessageBody);
-        context.handshakeMessagesSent[handshakeMessage.getHandshakeType()] =
-            encodedMessage.toBytes();
+        // final handshakeMessage = message;
+        // handshakeHeader = HandshakeHeader(
+        //   handshakeType: handshakeMessage.getHandshakeType(),
+        //   length: Uint24.fromUInt32(encodedMessageBody.length),
+        //   messageSequence: context.serverHandshakeSequenceNumber,
+        //   fragmentOffset: Uint24.fromUInt32(0),
+        //   fragmentLength: Uint24.fromUInt32(encodedMessageBody.length),
+        // );
+
+        // print("Handshake header: ${handshakeHeader}");
+        // print("encoded Message Body: ${encodedMessageBody.length}");
+        // context.increaseServerHandshakeSequence();
+
+        // final encodedHandshakeHeader = BytesBuilder();
+        // encodedHandshakeHeader.add(handshakeHeader.encode());
+        // encodedHandshakeHeader.add(encodedMessageBody);
+        // encodedMessage.add(encodedHandshakeHeader.toBytes());
+
+        // //     encodedHandshakeHeader := handshakeHeader.Encode()
+        // // encodedMessage = append(encodedMessage, encodedHandshakeHeader...)
+        // // encodedMessage = append(encodedMessage, encodedMessageBody...)
+
+        // var (hh, dOffset, err) = HandshakeHeader.decode(
+        //     encodedMessage.toBytes(), 0, encodedMessage.toBytes().length);
+
+        final sequenceNumber = Uint8List(6);
+        print("server sequence number: ${context.serverSequenceNumber}");
+        sequenceNumber[sequenceNumber.length - 1] +=
+            context.serverSequenceNumber;
+
+        // final recordHeader = RecordHeader(
+        //   contentType: message.getContentType(),
+        //   version: DtlsVersion.v1_2,
+        //   versionBytes: context.protocolVersion,
+        //   epoch: context.serverEpoch,
+        //   sequenceNumber: sequenceNumber,
+        //   intSequenceNumber: 0,
+        //   length: encodedMessage.toBytes().length,
+        // );
+
+        // final encodedRecordHeader = BytesBuilder();
+        // encodedRecordHeader.add(recordHeader.encode());
+        // encodedRecordHeader.add(encodedMessage.toBytes());
+
+        // //print("Decoded message: $header");
+
+        // final decodedMessage = await decodeDtlsMessage(
+        //     context,
+        //     encodedRecordHeader.toBytes(),
+        //     0,
+        //     encodedRecordHeader.toBytes().length);
+        // print("Decoded message: $decodedMessage");
+
+        //print("Handshake header: $hh");
+
+        // final decodedMessage = await decodeDtlsMessage(context,
+        //     encodedMessage.toBytes(), 0, encodedMessage.toBytes().length);
+        // print("Decoded message: $decodedMessage");
+
+        // context.handshakeMessagesSent[handshakeMessage.getHandshakeType()] =
+        //     encodedMessage.toBytes();
+
+        // Uint8List toBytes() {
+        final buffer = BytesBuilder();
+
+        //return buffer.toBytes();
+        //}
+
+        // Example cookie
+        final cookie = generateDtlsCookie();
+
+        // Create HelloVerifyRequest message
+        final helloVerifyRequest =
+            HelloVerifyRequest(Uint8List.fromList(cookie));
+
+        // Convert HelloVerifyRequest to bytes
+        final handshakeMessage = helloVerifyRequest.toBytes();
+
+        // Create DTLS record with HelloVerifyRequest
+        final dtlsRecord =
+            DTLSRecord(handshakeMessage, context.serverSequenceNumber);
+
+        buffer.addByte(dtlsRecord.contentType);
+        buffer.addByte(dtlsRecord.version >> 8);
+        buffer.addByte(dtlsRecord.version & 0xFF);
+
+        //buffer.add(context.protocolVersion);
+        buffer.addByte(dtlsRecord.epoch >> 8);
+        buffer.addByte(dtlsRecord.epoch & 0xFF);
+        buffer.add(sequenceNumber); // 6 bytes for sequence number
+        buffer.addByte(handshakeMessage.length >> 8);
+        buffer.addByte(handshakeMessage.length & 0xFF);
+        buffer.add(handshakeMessage);
+
+        // Convert DTLS record to bytes
+        final dtlsMessage = buffer.toBytes();
+
+        // Print the DTLS message bytes
+        // print('DTLS message: ${dtlsMessage}');
+
+        var (msg) = await decodeDtlsMessage(
+            context, dtlsMessage, 0, dtlsMessage.length);
+        print("dtls message: $msg");
+
+        context.conn.send(dtlsMessage, context.addr, context.port);
+
+        context.increaseServerSequence();
         break;
       case ContentType.ChangeCipherSpec:
         encodedMessage.add(encodedMessageBody);
         break;
+
+      default:
+        {
+          print("Unhandle content type:${message.getContentType()}");
+        }
     }
 
     final sequenceNumber = Uint8List(6);
     sequenceNumber[sequenceNumber.length - 1] += context.serverSequenceNumber;
-    final header = RecordHeader(
+    final recordHeader = RecordHeader(
       contentType: message.getContentType(),
       version: DtlsVersion.v1_2,
+      versionBytes: Uint8List.fromList([0xfe, 0xff]),
       epoch: context.serverEpoch,
       sequenceNumber: sequenceNumber,
       intSequenceNumber: 0,
-      length: encodedMessage.length,
+      length: encodedMessage.toBytes().length,
     );
 
     if (context.serverEpoch > 0) {
       // Epoch is greater than zero, we should encrypt it.
       if (context.isCipherSuiteInitialized) {
         final encryptedMessage =
-            await context.gcm!.encrypt(header, encodedMessage.toBytes());
+            await context.gcm!.encrypt(recordHeader, encodedMessage.toBytes());
         encodedMessage.clear();
         encodedMessage.add(encryptedMessage);
-        header.length = encodedMessage.length;
+        recordHeader.length = encodedMessage.length;
       }
     }
 
-    final encodedHeader = header.encode();
-    encodedMessage.add(encodedHeader);
+    // final encodedHeader = recordHeader.encode();
+    // //encodedMessage.add(encodedHeader);
+    // var (rh, dOffset, err) =
+    //     RecordHeader.decode(encodedHeader, 0, encodedHeader.length);
+
+    // print("Record header: $rh");
+
+    // final encodedRecordHeader = BytesBuilder();
+    // encodedRecordHeader.add(encodedHeader);
+    // encodedRecordHeader.add(encodedMessage.toBytes());
+
+    // //print("Decoded message: $header");
+
+    // final decodedMessage = await decodeDtlsMessage(context,
+    //     encodedRecordHeader.toBytes(), 0, encodedRecordHeader.toBytes().length);
+    // print("Decoded message: $decodedMessage");
 
     //processIncomingMessage(context, encodedMessage.toBytes());
-    context.conn.send(encodedMessage.toBytes(), context.addr, context.port);
+    // context.conn.send(encodedMessage.toBytes(), context.addr, context.port);
     // context.increaseServerSequence();
   }
 }

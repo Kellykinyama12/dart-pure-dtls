@@ -81,6 +81,7 @@ class RecordHeader {
 
   ContentType contentType;
   DtlsVersion version;
+  Uint8List versionBytes;
   int epoch;
   Uint8List sequenceNumber;
   int intSequenceNumber;
@@ -89,6 +90,7 @@ class RecordHeader {
   RecordHeader({
     required this.contentType,
     required this.version,
+    required this.versionBytes,
     required this.epoch,
     required this.sequenceNumber,
     required this.intSequenceNumber,
@@ -138,6 +140,8 @@ class RecordHeader {
     final version = DtlsVersion.values.firstWhere((v) =>
         v.value ==
         ByteData.sublistView(buf, offset, offset + 2).getUint16(0, Endian.big));
+
+    final versionBytes = buf.sublist(offset, offset + 2);
     offset += 2;
     final epoch =
         ByteData.sublistView(buf, offset, offset + 2).getUint16(0, Endian.big);
@@ -161,6 +165,7 @@ class RecordHeader {
       RecordHeader(
         contentType: contentType,
         version: version,
+        versionBytes: versionBytes,
         epoch: epoch,
         sequenceNumber: sequenceNumber,
         intSequenceNumber: seqNum,

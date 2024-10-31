@@ -2,18 +2,41 @@ import 'dart:typed_data';
 
 import 'utils.dart';
 
+// enum HandshakeType {
+//   HelloRequest,
+//   ClientHello,
+//   ServerHello,
+//   HelloVerifyRequest,
+//   Certificate,
+//   ServerKeyExchange,
+//   CertificateRequest,
+//   ServerHelloDone,
+//   CertificateVerify,
+//   ClientKeyExchange,
+//   Finished,
+// }
+
 enum HandshakeType {
-  HelloRequest,
-  ClientHello,
-  ServerHello,
-  HelloVerifyRequest,
-  Certificate,
-  ServerKeyExchange,
-  CertificateRequest,
-  ServerHelloDone,
-  CertificateVerify,
-  ClientKeyExchange,
-  Finished,
+  // https://github.com/eclipse/tinydtls/blob/706888256c3e03d9fcf1ec37bb1dd6499213be3c/dtls.h#L344
+  HelloRequest(0),
+  ClientHello(1),
+  ServerHello(2),
+  HelloVerifyRequest(3),
+  Certificate(11),
+  ServerKeyExchange(12),
+  CertificateRequest(13),
+  ServerHelloDone(14),
+  CertificateVerify(15),
+  ClientKeyExchange(16),
+  Finished(20);
+
+  const HandshakeType(this.value);
+
+  final int value;
+
+  factory HandshakeType.fromInt(int key) {
+    return values.firstWhere((element) => element.value == key);
+  }
 }
 
 extension HandshakeTypeExtension on HandshakeType {
